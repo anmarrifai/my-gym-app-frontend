@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount } from "svelte"; // Lifecycle hook
-  import { auth } from "$lib/firebaseConfig"; // Firebase Auth
+  import { onMount } from "svelte"; 
+  import { auth } from "$lib/firebaseConfig"; 
   import { dailyWorkoutStore } from "$lib/store";
 
 
@@ -51,7 +51,7 @@
   let toastMessage: string | null = null;
   let toastType: "success" | "error" | null = null;
 
-  // Lifecycle: On Mount
+  
   onMount(() => {
     const user = auth.currentUser;
     if (user) {
@@ -63,7 +63,7 @@
     }
   });
 
-    // Fetch Preferences & Data
+    
 
     //fetch prefernces to get the users workout plan 
     async function fetchPreferencesAndData() {

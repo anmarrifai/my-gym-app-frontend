@@ -5,26 +5,24 @@
   import { Preferences } from "@capacitor/preferences";
   import axios from "axios";
 
-  // State for toggling between calculator and manual entry forms
+  
   let formType: "calculator" | "manual" = "calculator";
 
-  // Input fields for calculator form
-  let age = "";
-  let gender = "male"; // Default to male
-  let height = ""; // cm
-  let weight = ""; // kg
-  let activityLevel = "sedentary"; // Default activity level
-  let goal = "maintenance"; // Default goal
 
-  // Manual entry fields
-  let dailyCalories = ""; // User's manual calorie input
+  let age = "";
+  let gender = "male"; 
+  let height = ""; 
+  let weight = "";
+  let activityLevel = "sedentary"; 
+  let goal = "maintenance"; 
+
+  let dailyCalories = ""; 
   let proteinPercentage = 40;
   let carbPercentage = 40;
   let fatPercentage = 20;
 
-  // API Response and Error Handling
-  let isLoading = false; // Loading state for API request
-  let errorMessage: string | null = null; // API error message (if any)
+  let isLoading = false; 
+  let errorMessage: string | null = null; 
 
   // API Configuration
   const apiBaseUrl = `${import.meta.env.VITE_CALORIE_BASE_URL}`;
@@ -66,7 +64,7 @@
       const data = response.data;
 
       if (data.caloric_needs) {
-        const calories = parseFloat(data.caloric_needs.calories); // Extract calories
+        const calories = parseFloat(data.caloric_needs.calories); 
         const protein = (calories * proteinPercentage) / 400; // 1g protein = 4 kcal
         const carbs = (calories * carbPercentage) / 400;
         const fats = (calories * fatPercentage) / 900; // 1g fat = 9 kcal
@@ -79,7 +77,7 @@
       errorMessage = "An error occurred while fetching caloric needs. Please check your inputs or try again later.";
       console.error("API Error:", error);
     } finally {
-      isLoading = false; // Hide loading state
+      isLoading = false; // hide loading
     }
   }
 
@@ -180,63 +178,62 @@
 {/if}
 
 <style>
-  /* Page Title */
+ 
 h1 {
   font-size: 2rem;
   font-weight: bold;
   text-align: center;
   margin-bottom: 2rem;
-  color: #333333; /* Dark gray */
+  color: #333333; 
 }
 
-/* Form Styling */
+
 form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Larger spacing between form elements */
+  gap: 1.5rem; 
   margin: 0 auto;
-  max-width: 500px; /* Center the form */
-  background-color: #ffffff; /* White background */
+  max-width: 500px; 
+  background-color: #ffffff; 
   padding: 1.5rem;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
 }
 
-/* Label Styling */
+
 label {
   display: flex;
   flex-direction: column;
   font-size: 1rem;
   font-weight: bold;
-  color: #333333; /* Dark gray */
+  color: #333333; 
 }
 
-/* Input and Select Styling */
 input,
 select {
   margin-top: 0.5rem;
   padding: 0.75rem;
   font-size: 1rem;
   border-radius: 8px;
-  border: 1px solid #cccccc; /* Light gray border */
-  background-color: #f9f9f9; /* Light gray background */
-  color: #333333; /* Dark gray text */
+  border: 1px solid #cccccc; 
+  background-color: #f9f9f9; 
+  color: #333333; 
 }
 
 input:focus,
 select:focus {
   outline: none;
-  border-color: #007bff; /* Blue border on focus */
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3); /* Blue glow */
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3); 
 }
 
-/* Button Styling */
+
 button {
   padding: 0.75rem 1rem;
   font-size: 1rem;
   font-weight: bold;
-  color: #ffffff; /* White text */
-  background-color: #007bff; /* Blue */
+  color: #ffffff;
+  background-color: #007bff; 
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -244,59 +241,50 @@ button {
 }
 
 button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  background-color: #0056b3; 
 }
 
 button:disabled {
-  background-color: #cccccc; /* Gray for disabled state */
+  background-color: #cccccc; 
   cursor: not-allowed;
 }
 
 button:active {
-  transform: scale(0.98); /* Slight shrink effect on click */
+  transform: scale(0.98); 
 }
 
-/* Error Message Styling */
+
 p[style="color: red;"] {
   font-size: 0.9rem;
-  color: #e63946; /* Red for error messages */
+  color: #e63946; 
   font-weight: bold;
   text-align: center;
 }
 
-/* Section Titles */
+
 p {
   font-size: 0.9rem;
-  color: #666666; /* Medium gray */
+  color: #666666;
   text-align: center;
 }
 
-/* Form Toggle Buttons */
 form + p {
   margin-top: 1rem;
   text-align: center;
   font-size: 0.9rem;
-  color: #666666; /* Medium gray */
+  color: #666666; 
 }
 
-form + p button {
-  margin-top: 1rem;
-  background-color: #4caf50; /* Green */
-}
 
-form + p button:hover {
-  background-color: #388e3c; /* Darker green */
-}
 
-/* Percentage Breakdown */
 p:last-of-type {
   font-size: 1rem;
   font-weight: bold;
   text-align: center;
-  color: #333333; /* Dark gray */
+  color: #333333; 
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
   form {
     padding: 1rem;

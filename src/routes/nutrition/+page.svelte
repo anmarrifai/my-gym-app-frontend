@@ -3,7 +3,7 @@
   import { searchFood, getFoodNutrition } from "$lib/api";
   import { Preferences } from "@capacitor/preferences";
   import { onMount, onDestroy , tick } from "svelte"; 
-  import { goto } from '$app/navigation'; // Allows navigation to other routes
+  import { goto } from '$app/navigation';
   import { Chart, registerables } from "chart.js";
   import {auth} from "$lib/firebaseConfig"; 
   import flatpickr from "flatpickr";
@@ -79,26 +79,25 @@
   let isCalendarOpen = false;
 
 
-  // Fetch Logs from Storage on Page Load
+ 
   
-  
+  // get the logs from database 
   async function fetchLogs() {
   try {
-    const userId = auth.currentUser?.uid; // Get the current user's ID
+    const userId = auth.currentUser?.uid; 
 
     if (!userId) {
       throw new Error("User not logged in!");
     }
-     // Cancel the previous request if it’s still running
+    
      if (currentFetchController) {
       currentFetchController.abort();
     }
 
-    // Create a new controller for the current request
     currentFetchController = new AbortController();
     const { signal } = currentFetchController;
 
-    // Fetch logs for the selected date from the database
+    
     const response = await fetch(
       `${import.meta.env.VITE_SERVER_BASE_URL}/api/food-logs?user_id=${userId}&log_date=${selectedDate}`
     );
@@ -119,20 +118,20 @@
       fats: parseFloat(log.fats),
     }));
 
-    dailyLog = [...dailyLog]; // Trigger reactivity
+    dailyLog = [...dailyLog];
 
-    currentFetchController = null; // Reset the controller after successful fetch
+    currentFetchController = null; 
   
   } catch (error) {
     console.error("Error fetching food logs:", error);
-    dailyLog = []; // Clear dailyLog on error
+    dailyLog = []; 
   }
 }
 
 
 async function setSelectedDate(newDate: string) {
-  selectedDate = newDate; // Update selectedDate
-  await fetchLogs(); // Fetch logs for the updated date
+  selectedDate = newDate; 
+  await fetchLogs(); 
 }
 
 
@@ -151,12 +150,12 @@ async function setSelectedDate(newDate: string) {
     
     const allKeys = (await Preferences.keys()).keys;
     const dateKeys = allKeys.filter(key => /^\d{4}-\d{2}-\d{2}$/.test(key));
-    availableDates = Array.from(new Set([...availableDates, ...dateKeys])); // Initialize with stored dates
-    await fetchLogs(); // Initial fetch on page load
-    await fetchCaloricNeeds(); // Fetch caloric needs data
+    availableDates = Array.from(new Set([...availableDates, ...dateKeys])); 
+    await fetchLogs(); 
+    await fetchCaloricNeeds(); 
     
     
-    // Attempt to sync logs when online
+   
     if (navigator.onLine) {
       await syncLogsWithServer();
     }
@@ -165,7 +164,7 @@ async function setSelectedDate(newDate: string) {
     logSection?.addEventListener("touchstart", handleTouchStart as EventListener);
     logSection?.addEventListener("touchend", handleTouchEnd as EventListener);
 
-    // Periodic sync every 5 minutes
+    // sync periodicaly 
     setInterval(async () => {
       if (navigator.onLine) {
         await syncLogsWithServer();
@@ -173,7 +172,8 @@ async function setSelectedDate(newDate: string) {
     }, 10 * 60 * 1000);
 
   });
-  // Listen for online event and trigger sync
+  
+
   window.addEventListener("online", async () => {
     await syncLogsWithServer();
   });
@@ -181,20 +181,12 @@ async function setSelectedDate(newDate: string) {
 
  
 
-  // Save Logs to Local Storage
+  // save logs locally
   async function saveLogs() {
     await Preferences.set({ key: selectedDate, value: JSON.stringify(dailyLog) });
   }
 
-  // Fetch Logs on Page Load
-  
-  
 
-  // Handle Date Selection
-  
-  
-
-  // Fetch completed dates from the backend
   async function fetchCompletedDates() {
     try {
       const response = await fetch(`${import.meta.env.VITE_SERVER_BASE_URL}/api/daily-summary/calendar?user_id=${userId}`);
@@ -203,7 +195,7 @@ async function setSelectedDate(newDate: string) {
       const data = await response.json();
       
 
-     // Extract the log_date values
+     
       completedDates = data.map((entry: { log_date: string }) => entry.log_date.split("T")[0]); // Strip time
       
     } catch (error) {
@@ -214,7 +206,7 @@ async function setSelectedDate(newDate: string) {
 
 
   
-  // Call this function on mount to initialize completed dates
+
   onMount(() => {
     fetchCompletedDates();
   });
@@ -222,7 +214,7 @@ async function setSelectedDate(newDate: string) {
 
 
 
-  // Select Food and Fetch Nutritional Details
+  // get nutrtion for selected food 
   async function handleSelectFood(foodName: string) {
     isLoading = true;
     try {
@@ -263,9 +255,9 @@ async function setSelectedDate(newDate: string) {
 }
 
 
-let searchResult: string[] = []; // Array to store food suggestions
+let searchResult: string[] = []; // 
 
-// Fetch autocomplete suggestions with debouncing
+// debonce to limit the number of requests 
 const handleAutocomplete = debounce(async () => {
   if (searchQuery.trim() === "") {
     searchResult = [];
@@ -274,25 +266,25 @@ const handleAutocomplete = debounce(async () => {
 
   try {
     const data = await searchFood(searchQuery); // Call Nutritionix API
-    // Extract only "common" food items and limit to 5 suggestions
-    searchResult = data.common.slice(0, 5).map((item: { food_name: string }) => item.food_name);
+   
+    searchResult = data.common.slice(0, 6).map((item: { food_name: string }) => item.food_name);
   } catch (error) {
     console.error("Error fetching food suggestions:", error);
     searchResult = [];
   }
-}, 300); // Debounce delay set to 300ms
+}, 300); 
 
-
+// auto compelte 
 async function selectFoodSuggestion(foodName: string) {
-  searchQuery = foodName; // Update the search bar with the selected food
-  searchResult = []; // Clear the suggestions dropdown
-  await handleSelectFood(foodName); // Use your existing logic to fetch nutritional details
+  searchQuery = foodName; 
+  searchResult = []; 
+  await handleSelectFood(foodName); 
 }
 
 
 
 
-  // Recalculate Nutrition
+  // recalculate on weight change 
   function recalculateNutrition(weightInGrams: number) {
     if (!selectedFood) return;
 
@@ -306,7 +298,7 @@ async function selectFoodSuggestion(foodName: string) {
     };
   }
 
-  // Add Food to Daily Log
+  // add food to log 
   async function addToLog() {
     if (!adjustedNutrition) return;
 
@@ -319,7 +311,7 @@ async function selectFoodSuggestion(foodName: string) {
         protein: adjustedNutrition.nf_protein,
         carbs: adjustedNutrition.nf_total_carbohydrate,
         fats: adjustedNutrition.nf_total_fat,
-        isSynced: false,// Mark as not synced
+        isSynced: false,
       },
     ];
 
@@ -330,7 +322,7 @@ async function selectFoodSuggestion(foodName: string) {
     clearSelection();
   }
 
-  // Clear Selection
+ 
   function clearSelection() {
     selectedFood = null;
     adjustedNutrition = null;
@@ -338,11 +330,11 @@ async function selectFoodSuggestion(foodName: string) {
     searchQuery = "";
   }
 
-  // Manual Entry Addition
+ 
   async function addManualFood() {
     const { name, weight, calories, protein, carbs, fats } = manualFood;
 
-    // Validation for empty fields or invalid inputs
+    
     if (!name.trim() || !weight || !calories || !protein || !carbs || !fats) {
       showToastMessage("Please fill in all fields with valid values.");
       return;
@@ -369,7 +361,7 @@ async function selectFoodSuggestion(foodName: string) {
         protein: Number(protein),
         carbs: Number(carbs),
         fats: Number(fats),
-        isSynced: false, // Mark as not synced
+        isSynced: false, 
       },
     ];
 
@@ -382,29 +374,28 @@ async function selectFoodSuggestion(foodName: string) {
     } else {
       console.log("No internet connection. Log saved locally.");
     }
-    // Collapse the manual entry section
+    
     isManualEntryOpen = false;
   }
 
  
-  // Enter edit mode
+  
   function enterEditMode(index: number) {
     dailyLog[index].isEditing = true;
-    dailyLog[index].tempWeight = dailyLog[index].weight; // Initialize temporary weight for editing
-    dailyLog = [...dailyLog]; // Trigger reactivity
+    dailyLog[index].tempWeight = dailyLog[index].weight; 
+    dailyLog = [...dailyLog]; 
   }
 
 
 
-// Function to save the edited log entry
 async function saveEdit(index: number) {
   const item = dailyLog[index];
-  const tempWeight = item.tempWeight || 0; // Ensure tempWeight is a valid number
+  const tempWeight = item.tempWeight || 0; 
 
   if (tempWeight > 0 && tempWeight <= 1000) {
     const ratio = tempWeight / item.weight;
 
-    // Updated food item details
+   
     const updatedItem = {
       ...item,
       weight: tempWeight,
@@ -412,22 +403,22 @@ async function saveEdit(index: number) {
       protein: item.protein * ratio,
       carbs: item.carbs * ratio,
       fats: item.fats * ratio,
-      isEditing: false, // Exit edit mode
+      isEditing: false, 
     };
 
     try {
-      // API call to update the food log in the database
+      
       const response = await fetch(`${import.meta.env.VITE_SERVER_BASE_URL}/api/food-logs`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user_id: userId, // Replace with dynamic user ID if available
-          log_date: selectedDate, // Selected log date
+          user_id: userId, 
+          log_date: selectedDate, 
           food_name: item.name,
-          weight_grams: item.weight, // Old weight
-          new_weight: tempWeight, // New weight
+          weight_grams: item.weight, 
+          new_weight: tempWeight, 
           calories: updatedItem.calories,
           protein: updatedItem.protein,
           carbs: updatedItem.carbs,
@@ -438,10 +429,9 @@ async function saveEdit(index: number) {
       const result = await response.json();
 
       if (response.ok) {
-        // Update local daily log after successful API update
+        
         dailyLog[index] = updatedItem;
 
-        // Update local storage
         dailyLogsByDate[selectedDate] = dailyLog;
         await Preferences.set({
           key: selectedDate,
@@ -460,32 +450,32 @@ async function saveEdit(index: number) {
       showToastMessage("Network error occurred while updating the food log.");
     }
 
-    dailyLog = [...dailyLog]; // Trigger reactivity
+    dailyLog = [...dailyLog]; 
   } else {
     showToastMessage("Please enter a valid weight (1-1000 grams).");
   }
 }
 
-  // Cancel editing
+ 
   function cancelEdit(index: number) {
-    dailyLog[index].isEditing = false; // Exit edit mode
-    dailyLog[index].tempWeight = dailyLog[index].weight; // Reset temporary weight
-    dailyLog = [...dailyLog]; // Trigger reactivity
+    dailyLog[index].isEditing = false; 
+    dailyLog[index].tempWeight = dailyLog[index].weight; 
+    dailyLog = [...dailyLog]; 
   }
-  // Delete a food log entry
+  
   async function deleteLog(index: number) {
-  const logToDelete = dailyLog[index]; // Get the log to delete
+  const logToDelete = dailyLog[index]; 
 
-  // Construct the API payload
+  
   const payload = {
-    user_id: userId, // Dynamic user ID
-    log_date: selectedDate, // Selected date
-    food_name: logToDelete.name, // Food name
-    weight_grams: logToDelete.weight, // Current weight
+    user_id: userId, 
+    log_date: selectedDate, 
+    food_name: logToDelete.name, 
+    weight_grams: logToDelete.weight, 
   };
 
   try {
-    // Make the DELETE API call
+    
     const response = await fetch(`${import.meta.env.VITE_SERVER_BASE_URL}/api/food-logs`, {
       method: "DELETE",
       headers: {
@@ -496,15 +486,15 @@ async function saveEdit(index: number) {
 
     if (response.ok) {
       
-      // Remove from local storage and UI only after successful API response
-      dailyLog.splice(index, 1); // Remove the food item from the daily log
+      
+      dailyLog.splice(index, 1); 
       dailyLogsByDate[selectedDate] = dailyLog;
       await Preferences.set({
         key: selectedDate,
         value: JSON.stringify(dailyLog),
       });
 
-      dailyLog = [...dailyLog]; // Trigger reactivity
+      dailyLog = [...dailyLog]; 
     } else {
       const errorData = await response.json();
       console.error("Failed to delete food log:", errorData);
@@ -571,8 +561,6 @@ async function saveEdit(index: number) {
     clearSelection();
   }
 
-
-  // Function to load previous date
   function loadPreviousDate() {
     const previousDate = new Date(selectedDate);
     previousDate.setDate(previousDate.getDate() - 1);
@@ -580,7 +568,6 @@ async function saveEdit(index: number) {
     setSelectedDate(selectedDate);
   }
 
-  // Function to load next date
   function loadNextDate() {
     const nextDate = new Date(selectedDate);
     nextDate.setDate(nextDate.getDate() + 1);
@@ -595,37 +582,33 @@ async function saveEdit(index: number) {
 
   function handleTouchEnd(event: TouchEvent) {
     const touchEndX = event.changedTouches[0].screenX;
-    const threshold = 50; // Minimum swipe distance
+    const threshold = 50; 
 
     if (touchStartX - touchEndX > threshold) {
-      loadNextDate(); // Swipe left to go to next day
+      loadNextDate(); 
     } else if (touchEndX - touchStartX > threshold) {
-      loadPreviousDate(); // Swipe right to go to previous day
+      loadPreviousDate(); 
     }
   }
 
-  // Function to display a toast message
+  
   function showToastMessage(message: string) {
     toastMessage = message;
     showToast = true;
-    setTimeout(() => (showToast = false), 3000); // Hide toast after 3 seconds
+    setTimeout(() => (showToast = false), 3000); 
   }
-
-   // Tracks whether the calendar is open
-
-
 
   
   function toggleCalendar() {
     isCalendarOpen = !isCalendarOpen;
 
     if (isCalendarOpen) {
-      // Ensure DOM updates are complete before initializing Flatpickr
+    
       tick().then(() => {
         if (!calendar) {
-          initializeCalendar(); // Initialize a new Flatpickr instance
+          initializeCalendar(); 
         } else {
-          // Destroy the old instance and reinitialize
+          
           if (calendar) {
             (calendar as flatpickr.Instance).destroy();
           }
@@ -644,10 +627,10 @@ async function saveEdit(index: number) {
       allowInput: true,
       defaultDate: selectedDate,
       parseDate: (datestr, format) => {
-        return moment(datestr, format, true).toDate(); // Parse with moment.js
+        return moment(datestr, format, true).toDate(); 
       },
       formatDate: (date, format) => {
-        return moment(date).format(format); // Format with moment.js
+        return moment(date).format(format); 
       },
       onChange: (selectedDates) => {
         if (selectedDates[0]) {
@@ -658,11 +641,11 @@ async function saveEdit(index: number) {
             .toISOString()
             .split("T")[0];
           selectedDate = utcDate;
-          setSelectedDate(selectedDate); // Fetch logs for the selected date
+          setSelectedDate(selectedDate); 
         }
       },
       onDayCreate: (dObj, dStr, fp, dayElem) => {
-        const date = dayElem.dateObj.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+        const date = dayElem.dateObj.toISOString().split("T")[0]; 
         if (completedDates.includes(date)) {
           // Apply inline styles for highlighting
           dayElem.style.backgroundColor = "#4caf50";
@@ -954,10 +937,9 @@ onDestroy(() => {
 
 
 .summary-section {
-  margin-top: 80px; /* Adjust based on the height of your header */
+  margin-top: 80px; 
 }
 
-/* Calendar Section */
 .calendar-dropdown-container {
   position: relative;
   margin-top: var(--spacing);

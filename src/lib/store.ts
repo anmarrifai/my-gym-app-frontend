@@ -3,7 +3,7 @@ import { writable } from 'svelte/store';
 // Store for current day
 export const currentDay = writable<number | null>(null);
 
-// Optionally, create a store for startDate if you need it elsewhere
+
 export const startDate = writable<string | null>(null);
 export const splitId = writable<string | null>(null);
 export const userId = writable<string | null>(null);

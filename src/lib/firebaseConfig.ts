@@ -4,11 +4,11 @@ import { getAuth , GoogleAuthProvider , onAuthStateChanged ,setPersistence,brows
 import { goto } from "$app/navigation";
 import { getStorage , ref , uploadBytes, getDownloadURL} from "firebase/storage";
 import { Preferences } from "@capacitor/preferences";
-// TODO: Add SDKs for Firebase products that you want to use
+
 // https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+//  Firebase configuration
+
 const firebaseConfig = {
   apiKey: `${import.meta.env.VITE_FIREBASE_APIKEY}`,
   authDomain: `${import.meta.env.VITE_FIREBASE_AUTH_DOMAIN}`,
@@ -19,15 +19,14 @@ const firebaseConfig = {
   measurementId: `${import.meta.env.VITE_FIREBASE_MEASURMENT_ID}`
 };
 
-// Initialize Firebase
+// firebase intitaliztion 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleAuthProvider = new GoogleAuthProvider();
 export const storage = getStorage(app);
 export { auth, googleAuthProvider, ref , uploadBytes, getDownloadURL };
 
-
-// Ensure session is persistent
+// session presistance handling 
 setPersistence(auth, browserLocalPersistence).catch((error) => {
   console.error("Failed to enable session persistence:", error);
 });
@@ -35,7 +34,7 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     console.log('User is logged in:', user);
     const token = await user.getIdToken();
-    // Store the token in local storage or use it for API calls
+    // store the token locally
     await Preferences.set({ key: 'firebase_user', value: JSON.stringify(user) });
   } else {
     console.log('User is not logged in');

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { auth, googleAuthProvider } from '../../lib/firebaseConfig';
-  import { sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+  import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
+  import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
   import { goto } from '$app/navigation';
   import { userId } from '../../lib/store';
   import { Preferences } from "@capacitor/preferences";
@@ -67,12 +68,13 @@
   // google login 
   async function handleGoogleLogin() {
     try {
-      const userData = await signInWithPopup(auth, googleAuthProvider);
-      const user = userData.user;
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      const userData = result.user;
+      const user = userData;
       if (user) {
         userId.set(user.uid);
+        await redirectToDashboardOrPreferences(user.uid);
       }
-      await redirectToDashboardOrPreferences(user.uid);
     } catch (error: unknown) {
       errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
       console.error(error);
@@ -199,13 +201,13 @@
   }
 
   .form-group input {
-    width: 100%; /* Ensures the input takes the full width of the container */
-    max-width: 370px; /* Adjusted to prevent spilling out of the page */
+    width: 100%; 
+    max-width: 370px; 
     padding: 10px;
     border: 1px solid #cccccc;
     border-radius: 10px;
     font-size: 14px;
-    box-sizing: border-box; /* Ensures padding doesn't exceed the max-width */
+    box-sizing: border-box; 
   }
 
 

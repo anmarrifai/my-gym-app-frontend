@@ -1,96 +1,123 @@
 <script lang="ts">
-  import { auth, googleAuthProvider } from '$lib/firebaseConfig';
-  import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithPopup } from 'firebase/auth';
-  import { goto } from '$app/navigation';
+  import { auth } from "$lib/firebaseConfig";
+  import {
+    createUserWithEmailAndPassword,
+    updateProfile,
+    sendEmailVerification,
+  } from "firebase/auth";
+  import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
 
-  let name = '';
-  let email = '';
-  let password = '';
-  let repeatPassword = '';
-  let errorMessage = '';
+  import { goto } from "$app/navigation";
+
+  let name = "";
+  let email = "";
+  let password = "";
+  let repeatPassword = "";
+  let errorMessage = "";
   let isSubmitting = false;
-  let toastMessage = '';
+  let toastMessage = "";
   let showToast = false;
 
-
-  // send the user info to the database after getting the user id from firebase 
-  async function saveUserToDatabase(user_id: string, email: string, name?: string) {
+  // send the user info to the database after getting the user id from firebase
+  async function saveUserToDatabase(
+    user_id: string,
+    email: string,
+    name?: string
+  ) {
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_BASE_URL}/api/user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id, email, name }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/user`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id, email, name }),
+        }
+      );
 
       if (!response.ok) {
-        console.error('Failed to save user:', await response.text());
+        console.error("Failed to save user:", await response.text());
       }
     } catch (error) {
-      console.error('Error saving user to database:', error);
+      console.error("Error saving user to database:", error);
     }
   }
 
-
-  // sing in with email and password 
+  // sing in with email and password
   async function handleSignUp() {
     if (!email || !password || !repeatPassword || !name) {
-      errorMessage = 'Please fill in all fields.';
+      errorMessage = "Please fill in all fields.";
       return;
     }
 
     if (password !== repeatPassword) {
-      errorMessage = 'Passwords do not match.';
+      errorMessage = "Passwords do not match.";
       return;
     }
 
     if (password.length < 6) {
-      errorMessage = 'Password must be at least 6 characters long.';
+      errorMessage = "Password must be at least 6 characters long.";
       return;
     }
 
     try {
       isSubmitting = true;
-      const userData = await createUserWithEmailAndPassword(auth, email, password);
-      // get the user ifd from firebase 
+      const userData = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      // get the user ifd from firebase
       const user = userData.user;
 
-      //add the users name from the form to firebase 
+      //add the users name from the form to firebase
       await updateProfile(user, { displayName: name });
 
-      await saveUserToDatabase(user.uid, user.email ?? 'withoutemail@anything.com', name);
+      await saveUserToDatabase(
+        user.uid,
+        user.email ?? "withoutemail@anything.com",
+        name
+      );
 
       await sendEmailVerification(user);
 
-      toastMessage = 'Verification email sent. Please check your inbox.';
+      toastMessage = "Verification email sent. Please check your inbox.";
       showToast = true;
       setTimeout(() => (showToast = false), 3000);
 
-      goto('/login');
+      goto("/login");
     } catch (error: unknown) {
-      errorMessage = error instanceof Error ? error.message : 'Sign-up failed.';
+      errorMessage = error instanceof Error ? error.message : "Sign-up failed.";
       console.error(error);
     } finally {
       isSubmitting = false;
     }
   }
 
-
-  //sign up with google 
+  //sign up with google
   async function handleGoogleSignUp() {
     try {
       isSubmitting = true;
-      const userData = await signInWithPopup(auth, googleAuthProvider);
-      const user = userData.user;
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      const userData = result.user;
+      const user = userData;
 
-      await saveUserToDatabase(user.uid, user.email ?? 'withoutemail@anything.com', user.displayName ?? 'Your Name');
+      if (user) {
+        await saveUserToDatabase(
+          user.uid,
+          user.email ?? "withoutemail@anything.com",
+          user.displayName ?? "Your Name"
+        );
 
-      toastMessage = 'Google sign-up successful!';
-      showToast = true;
-      setTimeout(() => (showToast = false), 3000);
+        toastMessage = "Google sign-up successful!";
+        showToast = true;
 
-      goto('/login');
+        setTimeout(() => (showToast = false), 3000);
+
+        goto("/login");
+      }
     } catch (error: unknown) {
-      errorMessage = error instanceof Error ? error.message : 'Google sign-in failed.';
+      errorMessage =
+        error instanceof Error ? error.message : "Google sign-in failed.";
       console.error(error);
     } finally {
       isSubmitting = false;
@@ -109,22 +136,46 @@
     <form on:submit|preventDefault={handleSignUp}>
       <div class="form-group">
         <label for="name">Name</label>
-        <input type="text" id="name" bind:value={name} placeholder="Enter your name" required />
+        <input
+          type="text"
+          id="name"
+          bind:value={name}
+          placeholder="Enter your name"
+          required
+        />
       </div>
 
       <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" id="email" bind:value={email} placeholder="Enter your email" required />
+        <input
+          type="email"
+          id="email"
+          bind:value={email}
+          placeholder="Enter your email"
+          required
+        />
       </div>
 
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" bind:value={password} placeholder="Enter your password" required />
+        <input
+          type="password"
+          id="password"
+          bind:value={password}
+          placeholder="Enter your password"
+          required
+        />
       </div>
 
       <div class="form-group">
         <label for="repeatPassword">Repeat Password</label>
-        <input type="password" id="repeatPassword" bind:value={repeatPassword} placeholder="Repeat your password" required />
+        <input
+          type="password"
+          id="repeatPassword"
+          bind:value={repeatPassword}
+          placeholder="Repeat your password"
+          required
+        />
       </div>
 
       {#if errorMessage}
@@ -132,23 +183,29 @@
       {/if}
 
       <button type="submit" class="signup-button" disabled={isSubmitting}>
-        {isSubmitting ? 'Signing Up...' : 'Sign Up'}
+        {isSubmitting ? "Signing Up..." : "Sign Up"}
       </button>
     </form>
 
     <div class="google-login">
       <p>Or sign up with:</p>
-      <button on:click={handleGoogleSignUp} class="google-login-button" disabled={isSubmitting}>
+      <button
+        on:click={handleGoogleSignUp}
+        class="google-login-button"
+        disabled={isSubmitting}
+      >
         <img src="/google.png" alt="Google Icon" /> Google
       </button>
     </div>
 
     <p class="login-link">
-      Already have an account? <button class="link-button" on:click={() => goto('/login')}>Log In</button>
+      Already have an account? <button
+        class="link-button"
+        on:click={() => goto("/login")}>Log In</button
+      >
     </p>
   </div>
 </div>
-
 
 <style>
   .signup-container {
@@ -158,9 +215,9 @@
     padding: 20px;
     background-color: #ffffff;
     min-height: 100vh;
-    position: relative; 
-    padding-top: 50px; 
-    padding-bottom: 80px; 
+    position: relative;
+    padding-top: 50px;
+    padding-bottom: 80px;
   }
 
   .card {
@@ -169,7 +226,7 @@
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 350px; 
+    max-width: 350px;
   }
 
   h1 {
@@ -192,7 +249,7 @@
 
   .form-group input {
     width: 100%;
-    max-width: 350px; 
+    max-width: 350px;
     padding: 10px;
     border: 1px solid #cccccc;
     border-radius: 5px;
@@ -202,7 +259,7 @@
 
   .form-group input:focus {
     outline: none;
-    border-color: #007BFF;
+    border-color: #007bff;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
   }
 
@@ -217,7 +274,7 @@
     width: 100%;
     max-width: 350px;
     padding: 10px;
-    background-color: #007BFF;
+    background-color: #007bff;
     color: white;
     border: none;
     border-radius: 5px;
@@ -245,8 +302,8 @@
     align-items: center;
     justify-content: center;
     background-color: white;
-    color: #007BFF;
-    border: 1px solid #007BFF;
+    color: #007bff;
+    border: 1px solid #007bff;
     padding: 10px;
     border-radius: 5px;
     cursor: pointer;
@@ -261,7 +318,7 @@
   }
 
   .google-login-button:hover {
-    background-color: #007BFF;
+    background-color: #007bff;
     color: white;
   }
 
@@ -273,7 +330,7 @@
 
   .link-button {
     background: none;
-    color: #007BFF;
+    color: #007bff;
     border: none;
     text-decoration: underline;
     cursor: pointer;
@@ -289,7 +346,7 @@
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #007BFF;
+    background-color: #007bff;
     color: white;
     padding: 10px 20px;
     border-radius: 5px;
